@@ -1,7 +1,8 @@
 import glob
 import os
+import pickle
 
-
+print(os.getcwd())
 from behavior_detection.BehavioralVideo import BehavioralVideo
 
 
@@ -19,9 +20,18 @@ def bower_circling_in_batches(config: str, batches: str, shuffle=1):
 
 
 def main():
-    config_path = r"/home/bree_student/Downloads/dlc_model-student-2023-07-26/config.yaml"
-    batches = r"/home/bree_student/Downloads/dlc_model-student-2023-07-26/videos/MC_singlenuc23_1_Tk33_021220/batches"
-    bower_circling_in_batches(config_path, batches, 4)
+   vid = r"/Users/ben/Downloads/0001_vid.mp4"
+   pose_data = r"/Users/ben/Downloads/0001_vidDLC_dlcrnetms5_dlc_modelJul26shuffle4_100000_el_filtered.csv"
+   velocities_path = r"/Users/ben/Downloads/0001_vidDLC_dlcrnetms5_dlc_modelJul26shuffle4_100000_el_filtered_velocities.pickle"
+
+   with open(velocities_path, 'rb') as handle:
+      velocities = pickle.load(handle)
+
+   #print(f'velocities: {velocities}')
+   behave = BehavioralVideo(video_path=vid, tracklets_path=pose_data)
+   behave.set(velocities=velocities)
+   behave.check_bower_circling(threshold=120, bower_circling_length=1, extract_clips=True, buffer=5)
+
 
 
 if __name__ == "__main__":

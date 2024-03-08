@@ -5,6 +5,7 @@ from pathlib import Path
 from behavior_detection.misc import stitch_analysis_metadata
 from behavior_detection.misc.train_network import kill_and_reset
 import behavior_detection.misc.ffmpeg_split as ffmpeg_split
+from behavior_detection.misc.dropbox_handling import find_trial_vid
 
 import pandas as pd
 import deeplabcut as dlc
@@ -147,7 +148,7 @@ def analyse_videos(config_path, videos: typing.List[typing.AnyStr], shuffle=1, p
         print("No gpus found. Using cpu...")
     else:
         for i, gpu in enumerate(gpus):
-            if gpu.memory_limit > 7000000000:
+            if gpu.memory_limit > 12000000000:
                 strong_gpu = True
                 gpu_to_use = i
                 break
@@ -165,13 +166,18 @@ def analyse_videos(config_path, videos: typing.List[typing.AnyStr], shuffle=1, p
                                          displayedindividuals=displayedindividuals, color_by="individual")
             continue
 
-        if os.path.isdir(vid):
+        batches = os.path.join(vid, "batches")
+
+        if os.path.exists(batches):
             # batches already made
             print("Batches have already been made. Skipping splitting...")
-            batches = os.path.join(vid, "batches")
             # be careful here in case there are other non-video files in the folder
             vid_name = Path(os.listdir(os.path.join(batches, "batch0"))[0]).name
         else:
+            if os.path.isdir(vid):
+                trial = find_trial_vid(vid)
+                vid = os.path.join(vid, find_trial_vid(os.listdir(vid)))
+            
             vid_name = Path(vid).name
             print(f"{vid_name} is long, and GPU is not strong enough to handle. Splitting video into 1 hour batches...")
             batches = split_video_by_hour(vid)
